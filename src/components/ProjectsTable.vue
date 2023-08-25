@@ -4,13 +4,12 @@
         <p>Общее количество: {{ projects.count }}</p>
         <div class="flex flex-col">
             <SearchComponent
-                :query="query"
+                    :query="query"
             />
             <SelectorComponent
-                :query="query"
+                    :query="query"
             />
         </div>
-
         <div class="flex flex-col">
             <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
                 <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
@@ -24,7 +23,12 @@
                                 <th scope="col" class="px-6 py-4">Status</th>
                             </tr>
                             </thead>
-                            <tbody>
+                            <tbody v-if="loading.status">
+                            <tr>
+                                <LoadingSvg/>
+                            </tr>
+                            </tbody>
+                            <tbody v-else>
                             <tr
                                     class="border-b dark:border-neutral-500"
                                     v-for="(project, key) in filter"
@@ -35,12 +39,6 @@
                                 <td class="whitespace-nowrap px-6 py-4">{{ project.title }}</td>
                                 <td class="whitespace-nowrap px-6 py-4">{{ project.status }}</td>
                             </tr>
-<!--                            <tr-->
-<!--                                class="border-b dark:border-neutral-500"-->
-<!--                                v-if="!filter.length"-->
-<!--                            >-->
-<!--                                <td class="whitespace-nowrap px-6 py-4 font-medium">No results :(</td>-->
-<!--                            </tr>-->
                             </tbody>
                         </table>
                     </div>
@@ -55,11 +53,14 @@ import axios from "axios";
 import {ref, onMounted, computed, reactive} from 'vue'
 import SearchComponent from "@/components/SearchComponent.vue";
 import SelectorComponent from "@/components/SelectorComponent.vue";
+import LoadingSvg from "@/components/LoadingSvg.vue";
 
 let projects = ref({
     search: null,
 });
-let isLoading = false;
+let loading = reactive({
+    status: false,
+});
 let query = reactive({
     search: '',
     selector: null,
@@ -68,14 +69,16 @@ let query = reactive({
 onMounted(async () => {
     await fetchData();
 })
-async function fetchData() {
-    isLoading = true;
-    await axios.get('https://dev.aicap.tech/api/v1/interview/projects/')
-        .then((res) => {
-            projects.value = res.data;
-            isLoading = false;
-        });
 
+async function fetchData() {
+    loading.status = true;
+    const res = await axios.get('https://dev.aicap.tech/api/v1/interview/projects/');
+
+    //here setTimeout done for showing loading status. without it loading is instant
+    setTimeout(() => {
+        projects.value = res.data;
+        loading.status = false;
+    }, 2000)
 }
 
 const filter = computed(() => {
@@ -83,9 +86,8 @@ const filter = computed(() => {
         return getSearchableProjects();
     } else if (query.selector) {
         return getSelectableProjects();
-    } else {
-        return projects.value.results;
     }
+    return projects.value.results;
 });
 
 const getSearchableProjects = () => {
