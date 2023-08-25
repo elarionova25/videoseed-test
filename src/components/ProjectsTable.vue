@@ -1,7 +1,6 @@
 <template>
     <div>
         <h1>Таблица проектов</h1>
-        <p>Общее количество: {{ projects.count }}</p>
         <div class="flex flex-col">
             <SearchComponent :query="query" />
             <SelectorComponent :query="query" />
@@ -76,19 +75,19 @@ let currentPage = ref(1);
 const pageSize = 7;
 
 onMounted(async () => {
-    await fetchData();
+    await fetchData.value;
 });
 
-async function fetchData() {
+const fetchData = computed(async () => {
     loading.status = true;
     const res = await axios.get("https://dev.aicap.tech/api/v1/interview/projects/");
 
     // here setTimeout done for showing loading status. without it loading is instant
     setTimeout(() => {
-        projects.value = res.data;
-        loading.status = false;
+    projects.value = res.data;
+    loading.status = false;
     }, 2000);
-}
+});
 
 const filter = computed(() => {
     if (query.search) {
