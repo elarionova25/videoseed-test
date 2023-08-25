@@ -2,6 +2,9 @@
     <div>
         <h1>Таблица проектов</h1>
         <p>Общее количество: {{ projects.count }}</p>
+        <SearchComponent
+                :query="query"
+        />
         <div class="flex flex-col">
             <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
                 <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
@@ -17,11 +20,11 @@
                             </thead>
                             <tbody>
                             <tr
-                                class="border-b dark:border-neutral-500"
-                                v-for="(project, key) in projects.results"
-                                :key="key"
+                                    class="border-b dark:border-neutral-500"
+                                    v-for="(project, key) in filter"
+                                    :key="key"
                             >
-                                <td class="whitespace-nowrap px-6 py-4 font-medium">{{ key }}</td>
+                                <td class="whitespace-nowrap px-6 py-4 font-medium">{{ key + 1 }}</td>
                                 <td class="whitespace-nowrap px-6 py-4">{{ project.id }}</td>
                                 <td class="whitespace-nowrap px-6 py-4">{{ project.title }}</td>
                                 <td class="whitespace-nowrap px-6 py-4">{{ project.status }}</td>
@@ -37,20 +40,34 @@
 
 <script setup>
 import axios from "axios";
+import {ref, onMounted, computed, reactive} from 'vue'
+import SearchComponent from "@/components/SearchComponent.vue";
 
-import {ref, onMounted} from 'vue'
-
-let projects = ref({});
+let projects = ref({
+    search: null,
+});
+let query = reactive({
+    search: '',
+});
 
 onMounted(async () => {
-    // el.value // <div>
     await fetchData();
 })
-
 async function fetchData() {
     const res = await axios.get('https://dev.aicap.tech/api/v1/interview/projects/');
     projects.value = res.data;
 }
+
+const filter = computed(() => {
+    if (query.search) {
+        return projects.value.results.filter((el) => {
+            return el.title.toLowerCase().indexOf(query.search) !== -1;
+        });
+    } else {
+        return projects.value.results;
+    }
+});
+
 </script>
 
 <style scoped>
