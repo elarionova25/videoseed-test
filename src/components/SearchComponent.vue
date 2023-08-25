@@ -23,9 +23,7 @@
 export default {
     name: 'SearchComponent',
     props: ['query'],
-    setup(props) {
-
-    }
+    setup(props) {}
 }
 </script>
 
