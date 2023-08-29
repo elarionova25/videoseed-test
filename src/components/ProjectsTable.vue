@@ -26,7 +26,7 @@
                             <tbody v-else>
                             <tr
                                 class="border-b dark:border-neutral-500"
-                                v-for="(project, index) in paginatedProjects"
+                                v-for="(project, index) in filter"
                                 :key="project.id"
                             >
                                 <td class="whitespace-nowrap px-6 py-4 font-medium">{{ (currentPage - 1) * pageSize + index + 1 }}</td>
@@ -72,22 +72,18 @@ let query = reactive({
     selector: null,
 });
 let currentPage = ref(1);
-const pageSize = 7;
+const pageSize = 10;
 
 onMounted(async () => {
-    await fetchData.value;
+    await fetchData(currentPage.value);
 });
 
-const fetchData = computed(async () => {
+const fetchData = async () => {
     loading.status = true;
-    const res = await axios.get("https://dev.aicap.tech/api/v1/interview/projects/");
-
-    // here setTimeout done for showing loading status. without it loading is instant
-    setTimeout(() => {
+    const res = await axios.get(`https://dev.aicap.tech/api/v1/interview/projects/?page=${currentPage.value}&page_size=${pageSize}`);
     projects.value = res.data;
     loading.status = false;
-    }, 2000);
-});
+};
 
 const filter = computed(() => {
     if (query.search) {
@@ -110,25 +106,16 @@ const getSelectableProjects = () => {
     });
 };
 
-const setCurrentPage = (page) => {
+const setCurrentPage = async (page) => {
     if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page;
+        await fetchData(currentPage.value)
     }
 };
 
-const paginatedProjects = computed(() => {
-    const startIndex = (currentPage.value - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    if(filter.value){
-        return filter.value.slice(startIndex, endIndex);
-    } else {
-        return null;
-    }
-});
-
 const totalPages = computed(() => {
     if(filter.value) {
-        return Math.ceil(filter.value.length / pageSize);
+        return Math.ceil(projects.value.count / pageSize);
     }
 });
 </script>
